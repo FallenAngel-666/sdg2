@@ -1,0 +1,915 @@
+/* ==========================================================================
+   SDG MATCHING GAME - STYLESHEET
+   Aesthetics: Sleek Dark Mode, Glassmorphism, Official SDG Color Palette
+   ========================================================================== */
+
+/* Custom SDG Color Definitions and Theme Variables */
+:root {
+    /* UN SDG Colors */
+    --color-sdg-1: hsl(353, 79%, 52%);   /* No Poverty: Red */
+    --color-sdg-2: hsl(40, 70%, 54%);    /* Zero Hunger: Mustard */
+    --color-sdg-3: hsl(108, 48%, 42%);   /* Good Health: Green */
+    --color-sdg-4: hsl(353, 77%, 44%);   /* Quality Education: Dark Red */
+    --color-sdg-5: hsl(7, 100%, 56%);    /* Gender Equality: Orange-Red */
+    --color-sdg-6: hsl(192, 77%, 51%);   /* Clean Water: Light Blue */
+    --color-sdg-7: hsl(46, 92%, 52%);    /* Clean Energy: Yellow */
+    --color-sdg-8: hsl(342, 73%, 36%);   /* Decent Work: Burgundy */
+    --color-sdg-9: hsl(19, 97%, 57%);    /* Industry/Innovation: Orange */
+    --color-sdg-10: hsl(335, 84%, 47%);  /* Reduced Inequalities: Pink/Magenta */
+    --color-sdg-11: hsl(34, 98%, 57%);   /* Cities: Yellow-Orange */
+    --color-sdg-12: hsl(42, 63%, 48%);   /* Consumption: Dark Yellow */
+    --color-sdg-13: hsl(125, 33%, 37%);  /* Climate Action: Dark Green */
+    --color-sdg-14: hsl(199, 91%, 45%);  /* Life Below Water: Blue */
+    --color-sdg-15: hsl(103, 63%, 46%);  /* Life on Land: Bright Green */
+    --color-sdg-16: hsl(200, 100%, 31%); /* Peace/Justice: Royal Blue */
+    --color-sdg-17: hsl(205, 62%, 26%);  /* Partnerships: Navy Blue */
+
+    /* Core Palette - Premium Dark */
+    --bg-app: hsl(222, 47%, 4%);
+    --bg-surface: hsl(222, 40%, 8%);
+    --bg-card: hsl(222, 35%, 12%);
+    --bg-card-hover: hsl(222, 30%, 16%);
+    --border-color: rgba(255, 255, 255, 0.06);
+    --border-color-glow: rgba(255, 255, 255, 0.15);
+    
+    /* Text colors */
+    --text-primary: hsl(210, 40%, 98%);
+    --text-secondary: hsl(215, 20%, 75%);
+    --text-muted: hsl(215, 14%, 55%);
+    --text-accent: hsl(192, 77%, 51%);
+
+    /* UI feedback states */
+    --color-correct: hsl(142, 69%, 43%);
+    --color-wrong: hsl(350, 74%, 50%);
+    --color-neutral: hsl(215, 20%, 40%);
+    
+    /* Typography & Effects */
+    --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    --font-title: 'Outfit', var(--font-sans);
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.2);
+    --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.35);
+    --shadow-lg: 0 16px 48px rgba(0, 0, 0, 0.5);
+    --glass-bg: rgba(13, 20, 38, 0.65);
+    --glass-border: rgba(255, 255, 255, 0.06);
+    --glass-blur: blur(12px);
+
+    /* Durations */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --transition-slow: 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Reset and base rules */
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none; /* Disable text select to make dragging smoother */
+}
+
+body {
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+}
+
+/* Confetti Overlay */
+#confetti-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 9999;
+}
+
+/* Main Container Layout */
+.app-container {
+    width: 100%;
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bg-app);
+}
+::-webkit-scrollbar-thumb {
+    background: var(--bg-card);
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bg-card-hover);
+}
+
+/* ==========================================================================
+   HEADER SECTION
+   ========================================================================== */
+.app-header {
+    text-align: center;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Decorative background glow */
+.app-header::before {
+    content: '';
+    position: absolute;
+    top: -50px;
+    left: -50px;
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(38,189,222,0.15) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.logo-area {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.logo-area h1 {
+    font-size: 0.9rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--text-secondary);
+}
+
+.sdg-wheel-icon {
+    width: 24px;
+    height: 24px;
+    background: conic-gradient(
+        var(--color-sdg-1) 0% 5.88%, var(--color-sdg-2) 5.88% 11.76%,
+        var(--color-sdg-3) 11.76% 17.64%, var(--color-sdg-4) 17.64% 23.52%,
+        var(--color-sdg-5) 23.52% 29.4%, var(--color-sdg-6) 29.4% 35.28%,
+        var(--color-sdg-7) 35.28% 41.16%, var(--color-sdg-8) 41.16% 47.04%,
+        var(--color-sdg-9) 47.04% 52.92%, var(--color-sdg-10) 52.92% 58.8%,
+        var(--color-sdg-11) 58.8% 64.68%, var(--color-sdg-12) 64.68% 70.56%,
+        var(--color-sdg-13) 70.56% 76.44%, var(--color-sdg-14) 76.44% 82.32%,
+        var(--color-sdg-15) 82.32% 88.2%, var(--color-sdg-16) 88.2% 94.08%,
+        var(--color-sdg-17) 94.08% 100%
+    );
+    border-radius: 50%;
+    animation: rotateWheel 12s linear infinite;
+    box-shadow: 0 0 10px rgba(255,255,255,0.1);
+}
+
+@keyframes rotateWheel {
+    100% { transform: rotate(360deg); }
+}
+
+.app-header h2 {
+    font-family: var(--font-title);
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.2;
+    background: linear-gradient(135deg, var(--text-primary) 40%, hsl(200, 100%, 75%));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.75rem;
+}
+
+.subtitle {
+    font-size: 1.05rem;
+    color: var(--text-secondary);
+    max-width: 800px;
+    margin: 0 auto;
+    font-weight: 400;
+}
+
+/* ==========================================================================
+   DASHBOARD / STATS PANEL
+   ========================================================================== */
+.dashboard-panel {
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: 20px;
+    padding: 1.25rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 1rem;
+    z-index: 100;
+    transition: box-shadow var(--transition-normal);
+}
+
+.dashboard-panel.is-scrolled {
+    box-shadow: var(--shadow-lg);
+    border-color: var(--border-color-glow);
+}
+
+.stat-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+}
+
+.stat-value {
+    font-family: var(--font-title);
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    display: flex;
+    align-items: baseline;
+}
+
+#score-display {
+    color: var(--text-accent);
+}
+
+.score-max {
+    font-size: 1rem;
+    color: var(--text-muted);
+    margin-left: 0.25rem;
+}
+
+/* Buttons and Controls */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.5rem;
+    border-radius: 12px;
+    font-family: var(--font-sans);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all var(--transition-normal);
+}
+
+.btn-secondary {
+    background: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color-glow);
+    transform: translateY(-2px);
+}
+
+.btn-secondary:active {
+    transform: translateY(0);
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, hsl(192, 77%, 51%) 0%, hsl(200, 100%, 41%) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(38, 189, 226, 0.35);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 6px 20px rgba(38, 189, 226, 0.5);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+}
+
+.btn-large {
+    padding: 1rem 2.5rem;
+    font-size: 1.1rem;
+    border-radius: 14px;
+}
+
+.btn-icon {
+    width: 18px;
+    height: 18px;
+}
+
+/* ==========================================================================
+   GAME BOARD LAYOUT
+   ========================================================================== */
+.game-board {
+    display: grid;
+    grid-template-columns: 1.1fr 0.9fr; /* Slightly wider left side to fit the goals inside slots */
+    gap: 2rem;
+    align-items: start;
+}
+
+.board-column {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-sm);
+    min-height: 800px;
+}
+
+.column-title {
+    font-family: var(--font-title);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.75rem;
+}
+
+.column-title .icon {
+    font-size: 1.4rem;
+}
+
+/* ==========================================================================
+   LEFT COLUMN: NUMBER TARGET SLOTS
+   ========================================================================== */
+.slots-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.slot-item {
+    display: flex;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0.5rem;
+    min-height: 76px;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+}
+
+.slot-number {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--font-title);
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-secondary);
+    margin-right: 0.75rem;
+    transition: all var(--transition-normal);
+}
+
+.slot-target {
+    flex-grow: 1;
+    min-height: 60px;
+    border-radius: 12px;
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    transition: all var(--transition-normal);
+    position: relative;
+}
+
+/* Target Slot Empty placeholder text */
+.slot-target::before {
+    content: attr(data-placeholder);
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    pointer-events: none;
+    text-align: center;
+    transition: opacity var(--transition-fast);
+}
+
+.slot-target.has-card::before {
+    opacity: 0;
+    display: none;
+}
+
+/* Drag Over Slot Effects */
+.slot-item.drag-over {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 15px var(--accent-glow);
+    background: var(--bg-card-hover);
+}
+
+.slot-item.drag-over .slot-target {
+    border-color: var(--text-accent);
+    background: rgba(38, 189, 226, 0.05);
+}
+
+.slot-item.drag-over .slot-number {
+    color: var(--text-accent);
+    border-color: var(--text-accent);
+}
+
+/* Matching Feedback States - Lock Placement visuals */
+.slot-item.state-correct {
+    border-color: var(--color-correct);
+    background: rgba(16, 185, 129, 0.06);
+}
+.slot-item.state-correct .slot-number {
+    background: var(--color-correct);
+    color: white;
+    border-color: var(--color-correct);
+}
+.slot-item.state-correct .slot-target {
+    border: 2px solid rgba(16, 185, 129, 0.4);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.slot-item.state-wrong {
+    border-color: var(--color-wrong);
+    background: rgba(239, 68, 68, 0.06);
+}
+.slot-item.state-wrong .slot-number {
+    background: var(--color-wrong);
+    color: white;
+    border-color: var(--color-wrong);
+}
+.slot-item.state-wrong .slot-target {
+    border: 2px solid rgba(239, 68, 68, 0.4);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+/* Lock matched correct/wrong card inside target */
+.slot-target.has-card .goal-card {
+    width: 100%;
+    margin: 0;
+    box-shadow: none;
+    border: none;
+    background: transparent;
+    cursor: default;
+}
+
+/* ==========================================================================
+   RIGHT COLUMN: DRAGGABLE GOAL CARDS
+   ========================================================================== */
+.goals-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+    /* Make scrollable if contents run too long */
+    max-height: 800px;
+    overflow-y: auto;
+    padding-right: 0.5rem;
+}
+
+.goal-card {
+    display: flex;
+    align-items: center;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 0.75rem 1rem;
+    cursor: grab;
+    transition: all var(--transition-normal);
+    position: relative;
+    overflow: hidden;
+    gap: 0.75rem;
+    box-shadow: var(--shadow-sm);
+}
+
+/* Styling left colored indicator tag on cards */
+.goal-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 5px;
+    background: var(--sdg-color, var(--color-neutral));
+    transition: width var(--transition-fast);
+}
+
+.goal-card:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-color-glow);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+}
+
+.goal-card:hover::before {
+    width: 8px;
+}
+
+.goal-card:active {
+    cursor: grabbing;
+}
+
+/* Visual cue when card is being dragged */
+.goal-card.dragging {
+    opacity: 0.4;
+    border: 1px dashed var(--text-muted);
+    transform: scale(0.98);
+    box-shadow: none;
+}
+
+/* Tap to select fallback visual states */
+.goal-card.selected {
+    border-color: var(--text-accent);
+    box-shadow: 0 0 12px var(--accent-glow);
+    background: var(--bg-card-hover);
+    transform: scale(1.02);
+}
+
+.goal-card.selected::before {
+    width: 10px;
+}
+
+/* Card Content Details */
+.goal-icon {
+    font-size: 1.8rem;
+    min-width: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.goal-info {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.goal-title {
+    font-family: var(--font-title);
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.goal-desc {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 400;
+}
+
+/* When placed card is inside slot */
+.slot-target .goal-card {
+    padding: 0.25rem 0.5rem;
+    min-height: 50px;
+}
+
+.slot-target .goal-card::before {
+    display: none;
+}
+
+.slot-target .goal-icon {
+    font-size: 1.5rem;
+    min-width: 30px;
+}
+
+.slot-target .goal-title {
+    font-size: 0.95rem;
+}
+
+.slot-target .goal-desc {
+    display: none; /* Hide descriptions to conserve vertical space in target slots */
+}
+
+/* Locked status text shown when item is matched */
+.slot-lock-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-left: 0.5rem;
+    padding: 0.25rem;
+}
+
+.state-correct .slot-lock-indicator {
+    color: var(--color-correct);
+}
+
+.state-wrong .slot-lock-indicator {
+    color: var(--color-wrong);
+}
+
+/* ==========================================================================
+   FOOTER SECTION
+   ========================================================================== */
+.app-footer {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-color);
+}
+
+.app-footer strong {
+    color: var(--text-secondary);
+}
+
+/* ==========================================================================
+   MODAL / OVERLAY FOR END-GAME CHAMPION RESULTS
+   ========================================================================== */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(3, 7, 18, 0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--transition-slow);
+    padding: 1.5rem;
+}
+
+.modal-overlay.is-visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.modal-card {
+    background: var(--bg-surface);
+    border: 1px solid var(--border-color-glow);
+    box-shadow: var(--shadow-lg);
+    border-radius: 32px;
+    max-width: 550px;
+    width: 100%;
+    padding: 3rem 2.5rem;
+    text-align: center;
+    transform: scale(0.9) translateY(20px);
+    transition: transform var(--transition-slow);
+    position: relative;
+    overflow: hidden;
+}
+
+.modal-overlay.is-visible .modal-card {
+    transform: scale(1) translateY(0);
+}
+
+.modal-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(38,189,222,0.2) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.modal-header-icon {
+    font-size: 4.5rem;
+    line-height: 1;
+    margin-bottom: 1.5rem;
+    animation: pulseIcon 2.5s infinite ease-in-out;
+}
+
+@keyframes pulseIcon {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.modal-card h2 {
+    font-family: var(--font-title);
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+}
+
+.modal-subtitle {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* Modal Statistics Box Group */
+.modal-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.modal-stat-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 18px;
+    padding: 1.25rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.modal-stat-val {
+    font-family: var(--font-title);
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-accent);
+}
+
+#modal-score {
+    color: hsl(142, 69%, 45%);
+}
+
+.modal-stat-lbl {
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.modal-feedback {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px dashed var(--border-color);
+    border-radius: 16px;
+    padding: 1.25rem;
+    font-size: 1rem;
+    font-weight: 500;
+    line-height: 1.5;
+    color: var(--text-secondary);
+    margin-bottom: 2rem;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN ADAPTATIONS
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+    .app-container {
+        padding: 1.5rem 1rem;
+    }
+    .game-board {
+        gap: 1.5rem;
+    }
+    .board-column {
+        padding: 1.25rem;
+        min-height: 700px;
+    }
+}
+
+@media (max-width: 992px) {
+    .game-board {
+        grid-template-columns: 1fr; /* Stack layout on medium screens (tablets) */
+        gap: 2rem;
+    }
+    
+    .board-column {
+        min-height: auto;
+    }
+
+    .goals-grid {
+        max-height: 450px; /* Limit scroll height on stack view */
+    }
+
+    .dashboard-panel {
+        padding: 1rem;
+        border-radius: 16px;
+        position: sticky;
+        top: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 1.3rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .app-header h2 {
+        font-size: 1.8rem;
+    }
+
+    .subtitle {
+        font-size: 0.9rem;
+    }
+
+    .dashboard-panel {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+        padding: 1rem;
+    }
+
+    .stat-box:nth-child(even) {
+        text-align: right;
+    }
+
+    .stat-box:nth-child(even) .stat-value {
+        justify-content: flex-end;
+    }
+
+    .control-box {
+        grid-column: span 2;
+        width: 100%;
+    }
+
+    .control-box button {
+        width: 100%;
+    }
+
+    .slot-item {
+        min-height: 66px;
+    }
+
+    .slot-number {
+        width: 38px;
+        height: 38px;
+        min-width: 38px;
+        font-size: 1.1rem;
+        margin-right: 0.5rem;
+    }
+
+    .slot-target::before {
+        font-size: 0.75rem;
+    }
+
+    .goal-card {
+        padding: 0.6rem 0.8rem;
+    }
+
+    .goal-icon {
+        font-size: 1.4rem;
+        min-width: 30px;
+    }
+
+    .goal-title {
+        font-size: 0.9rem;
+    }
+
+    .goal-desc {
+        font-size: 0.75rem;
+    }
+
+    .modal-card {
+        padding: 2rem 1.5rem;
+    }
+
+    .modal-card h2 {
+        font-size: 1.7rem;
+    }
+
+    .modal-stats {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+    }
+
+    .modal-stat-item {
+        padding: 0.75rem;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-stat-val {
+        order: 2;
+        font-size: 1.2rem;
+    }
+
+    .modal-stat-lbl {
+        order: 1;
+    }
+}

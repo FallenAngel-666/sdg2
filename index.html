@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UN SDG Matching Game - Interactive Learning Challenge</title>
+    <meta name="description" content="Test your knowledge of the 17 United Nations Sustainable Development Goals (SDGs) in this interactive, premium drag-and-drop matching game. Match each goal to its number and track your score!">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Main stylesheet -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Confetti canvas overlay -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="app-container">
+        <!-- Header Section -->
+        <header class="app-header">
+            <div class="logo-area">
+                <span class="sdg-wheel-icon"></span>
+                <h1>United Nations</h1>
+            </div>
+            <h2>Sustainable Development Goals</h2>
+            <p class="subtitle">Drag the correct SDG card on the right and drop it into its matching number slot on the left. Once dropped, cards are locked and cannot be changed!</p>
+        </header>
+
+        <!-- Stats and Controls Dashboard -->
+        <section class="dashboard-panel" aria-label="Game Dashboard">
+            <div class="stat-box">
+                <span class="stat-label">Total Marks</span>
+                <span class="stat-value" id="score-display">0 <span class="score-max">/ 34</span></span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Placed Goals</span>
+                <span class="stat-value" id="match-display">0 / 17</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Time Elapsed</span>
+                <span class="stat-value" id="timer-display">00:00</span>
+            </div>
+            <div class="stat-box">
+                <span class="stat-label">Accuracy</span>
+                <span class="stat-value" id="accuracy-display">0%</span>
+            </div>
+            <div class="control-box">
+                <button id="reset-btn" class="btn btn-secondary" title="Restart the game and reshuffle goals">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    Reset Game
+                </button>
+            </div>
+        </section>
+
+        <!-- Main Game Area -->
+        <main class="game-board" id="game-board">
+            <!-- Left Side: Slots Container -->
+            <section class="board-column column-left" aria-label="SDG Slots">
+                <h3 class="column-title">
+                    <span class="icon">📦</span> Target Number Slots
+                </h3>
+                <div class="slots-grid" id="slots-grid">
+                    <!-- Slots pre-rendered/injected here dynamically -->
+                </div>
+            </section>
+
+            <!-- Right Side: Goals Draggable Container -->
+            <section class="board-column column-right" aria-label="Draggable SDGs">
+                <h3 class="column-title">
+                    <span class="icon">🎨</span> Draggable Goal Cards (Identify & Match)
+                </h3>
+                <div class="goals-grid" id="goals-grid">
+                    <!-- Draggable SDG cards will be dynamically generated and shuffled here via JS -->
+                </div>
+            </section>
+        </main>
+
+        <!-- Custom Instructions / Info Footer -->
+        <footer class="app-footer">
+            <p>Created to support understanding of the UN 2030 Agenda. Each correct goal awards <strong>2 marks</strong>. Once placed, choices are final and cannot be modified.</p>
+        </footer>
+    </div>
+
+    <!-- Celebration / Final Result Modal -->
+    <div class="modal-overlay" id="completion-modal" aria-hidden="true" role="dialog" aria-labelledby="modal-title">
+        <div class="modal-card">
+            <div class="modal-header-icon">🏆</div>
+            <h2 id="modal-title">Challenge Completed!</h2>
+            <p class="modal-subtitle">You have completed the SDG matching game challenge.</p>
+            
+            <div class="modal-stats">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-val" id="modal-score">0 / 34</div>
+                    <div class="modal-stat-lbl">Final Marks</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-val" id="modal-time">00:00</div>
+                    <div class="modal-stat-lbl">Time Taken</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-val" id="modal-accuracy">0%</div>
+                    <div class="modal-stat-lbl">Accuracy Rate</div>
+                </div>
+            </div>
+
+            <div class="modal-feedback" id="modal-feedback-text">
+                Excellent effort! You are an SDG expert.
+            </div>
+
+            <div class="modal-actions">
+                <button id="replay-btn" class="btn btn-primary btn-large">
+                    <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+                    </svg>
+                    Play Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main JS logic -->
+    <script src="script.js"></script>
+</body>
+</html>
