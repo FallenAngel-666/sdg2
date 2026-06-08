@@ -117,6 +117,10 @@ function initGame() {
     // Render Slots & Goals
     renderSlots();
     renderGoals();
+
+    // Setup Event Listeners
+    setupDragAndDrop();
+    setupMobileFallback();
 }
 
 // Render empty target slots numbered 1 to 17
@@ -371,7 +375,11 @@ function placeCardInSlot(card, slotItem) {
 }
 
 // Mobile Tap-to-Select Fallback Handlers
+let mobileListenersAttached = false;
 function setupMobileFallback() {
+    if (mobileListenersAttached) return;
+    mobileListenersAttached = true;
+
     goalsGrid.addEventListener("click", (e) => {
         const goalCard = e.target.closest(".goal-card");
         if (!goalCard || goalCard.getAttribute("draggable") === "false") return;
