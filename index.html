@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UN SDG Matching Game 2.0 - Interactive Learning Challenge</title>
-    <meta name="description" content="Test your knowledge of the 17 United Nations Sustainable Development Goals (SDGs) in this interactive, premium drag-and-drop matching game. Match each goal to its number and track your score!">
+    <title>UN SDG Matching Challenge 2.0</title>
+    <meta name="description" content="Test your knowledge of the 17 United Nations Sustainable Development Goals (SDGs) in this interactive drag-and-drop matching game.">
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -49,14 +49,6 @@
     </div>
 
     <div class="app-container">
-        <!-- Top Navigation Bar -->
-        <div class="top-nav">
-            <span class="nav-badge">SDG 2.0 Edition</span>
-            <a href="central-game-station.html" class="nav-link station-btn" title="View all student results and download Excel sheet">
-                <span class="btn-icon">📊</span> Central Game Station ↗
-            </a>
-        </div>
-
         <!-- Header Section -->
         <header class="app-header">
             <div class="logo-area">
@@ -113,11 +105,6 @@
         <!-- Custom Instructions / Info Footer -->
         <footer class="app-footer">
             <p>Created to support understanding of the UN 2030 Agenda. Each correct goal awards <strong>2 marks</strong>. Once placed, choices are final and cannot be modified.</p>
-            <p style="margin-top: 0.5rem;">
-                <a href="central-game-station.html" style="color: var(--text-accent); text-decoration: none; font-weight: 600;">
-                    Go to Central Game Station (Results Dashboard) →
-                </a>
-            </p>
         </footer>
     </div>
 
@@ -147,19 +134,15 @@
                 Excellent effort! You are an SDG expert.
             </div>
 
-            <!-- Central Game Station Save Panel -->
-            <div class="modal-actions" id="modal-actions-box">
-                <a href="central-game-station.html" class="btn btn-primary btn-large">
-                    📊 View in Central Game Station
-                </a>
-                <button id="replay-btn" class="btn btn-secondary btn-large">
-                    Play Again
-                </button>
+            <!-- Central Game Station Status feedback -->
+            <div id="submission-status" class="submission-status sending">
+                📡 Transmitting score to Central Game Station...
             </div>
-            
-            <!-- Submission status feedback -->
-            <div id="submission-status" class="submission-status success">
-                ✅ Saved to Central Game Station automatically!
+
+            <div class="modal-actions" id="modal-actions-box">
+                <button id="replay-btn" class="btn btn-primary btn-large" style="width: 100%;">
+                    Play Again 🔄
+                </button>
             </div>
         </div>
     </div>

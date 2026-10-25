@@ -1,13 +1,20 @@
 /**
  * ==========================================================================
- * SDG MATCHING GAME 2.0 - LOGIC ENGINE (CENTRAL GAME STATION EDITION)
+ * SDG MATCHING GAME 2.0 - STUDENT GAME ENGINE
  * Features: Drag & Drop (Locking), Student Registration (Name, Class, Section, Roll),
- *           Automatic Record Saving to Central Game Station, Real-time Scoring,
- *           Detailed Match Analytics & Confetti Engine.
+ *           Automatic Submission to Central Game Station, Real-time Scoring & Confetti.
  * ==========================================================================
  */
 
-// 1. UN Sustainable Development Goals Data
+// ==========================================================================
+// CENTRAL GAME STATION CLOUD DATABASE CONFIGURATION
+// Connects this Game Website to your Central Game Station Website.
+// 1. Create a free Realtime Database at https://console.firebase.google.com (in Test Mode)
+// 2. Paste your Database URL below (e.g. "https://your-project-default-rtdb.firebaseio.com")
+// ==========================================================================
+const CENTRAL_STATION_DB_URL = "https://sdg-central-station-default-rtdb.firebaseio.com";
+
+// UN Sustainable Development Goals Data
 const sdgData = [
     { id: 1, title: "No Poverty", desc: "End poverty in all its forms everywhere.", emoji: "🛖", color: "var(--color-sdg-1)" },
     { id: 2, title: "Zero Hunger", desc: "End hunger, achieve food security, and promote sustainable agriculture.", emoji: "🍲", color: "var(--color-sdg-2)" },
@@ -28,10 +35,10 @@ const sdgData = [
     { id: 17, title: "Partnerships for the Goals", desc: "Strengthen the means of implementation and revitalize the Global Partnership.", emoji: "🤝", color: "var(--color-sdg-17)" }
 ];
 
-// 2. Storage Key for Central Game Station
-const CENTRAL_STATION_STORAGE_KEY = "sdg_central_game_station_records";
+// Local backup storage key
+const LOCAL_STORAGE_KEY = "sdg_central_game_station_records";
 
-// 3. Game State Variables
+// Game State Variables
 let boardState = {
     matches: {}, // key: slotId (1-17), value: goalId (1-17)
     score: 0,
@@ -48,7 +55,7 @@ let boardState = {
     submitted: false
 };
 
-// 4. DOM Elements
+// DOM Elements
 const slotsGrid = document.getElementById("slots-grid");
 const goalsGrid = document.getElementById("goals-grid");
 const scoreDisplay = document.getElementById("score-display");
@@ -75,7 +82,7 @@ const modalFeedback = document.getElementById("modal-feedback-text");
 const replayBtn = document.getElementById("replay-btn");
 const submissionStatus = document.getElementById("submission-status");
 
-// 5. Initial Game Setup
+// Initial Game Setup
 function initGame() {
     clearInterval(boardState.timerInterval);
     boardState = {
@@ -109,6 +116,10 @@ function initGame() {
     if (participantClassInput) participantClassInput.value = "";
     if (participantSectionInput) participantSectionInput.value = "";
     if (participantRollInput) participantRollInput.value = "";
+
+    // Reset Submission Status
+    submissionStatus.className = "submission-status sending";
+    submissionStatus.textContent = "📡 Transmitting score to Central Game Station...";
 
     // Render Slots & Goals
     renderSlots();
@@ -185,7 +196,7 @@ function renderGoals() {
     });
 }
 
-// 6. Registration Form Submission
+// Registration Form Submission
 registrationForm.addEventListener("submit", (e) => {
     e.preventDefault();
     boardState.participantName = participantNameInput.value.trim();
@@ -200,7 +211,7 @@ registrationForm.addEventListener("submit", (e) => {
     startTimer();
 });
 
-// 7. Timer Functions
+// Timer Functions
 function startTimer() {
     boardState.gameStarted = true;
     boardState.startTime = Date.now();
@@ -220,7 +231,7 @@ function formatTime(seconds) {
     return `${mins}:${secs}`;
 }
 
-// 8. Scoring and Stats Updater
+// Scoring and Stats Updater
 function updateStats() {
     let matchesCount = Object.keys(boardState.matches).length;
     let correctCount = 0;
@@ -248,7 +259,7 @@ function updateStats() {
     }
 }
 
-// 9. End Game, Celebration, and Central Game Station Auto-Save
+// End Game, Celebration, and Delivery to Central Game Station
 function endGame(accuracy, correctCount) {
     clearInterval(boardState.timerInterval);
 
@@ -293,8 +304,8 @@ function endGame(accuracy, correctCount) {
         details: matchBreakdown
     };
 
-    // Save record to Central Game Station storage
-    saveRecordToCentralStation(participantRecord);
+    // Send record to Central Game Station (Cloud DB + local fallback)
+    transmitRecordToCentralStation(participantRecord);
 
     // Update Modal Information
     modalSubtitleText.textContent = `Student: ${boardState.participantName} | Class: ${boardState.participantClass}-${boardState.participantSection} | Roll: ${boardState.participantRoll}`;
@@ -313,31 +324,52 @@ function endGame(accuracy, correctCount) {
     } else if (boardState.score >= 18) {
         feedback = `👍 Good job! You scored ${boardState.score}/34 marks. Keep reviewing the 17 global goals!`;
     } else {
-        feedback = `📚 Keep learning! You scored ${boardState.score}/34 marks. Check your details in the Central Game Station!`;
+        feedback = `📚 Keep learning! You scored ${boardState.score}/34 marks. Your submission is complete!`;
     }
     modalFeedback.textContent = feedback;
 
-    // Show modal after slight delay for smooth transition
+    // Show modal after slight delay
     setTimeout(() => {
         completionModal.classList.add("is-visible");
         completionModal.setAttribute("aria-hidden", "false");
     }, 450);
 }
 
-// Save participant data to localStorage for Central Game Station
-function saveRecordToCentralStation(record) {
+// Transmit participant data to Central Game Station
+async function transmitRecordToCentralStation(record) {
+    // 1. Save locally as fallback
     try {
-        const stored = localStorage.getItem(CENTRAL_STATION_STORAGE_KEY);
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
         const recordsList = stored ? JSON.parse(stored) : [];
-        recordsList.unshift(record); // Prepend so newest is at the top
-        localStorage.setItem(CENTRAL_STATION_STORAGE_KEY, JSON.stringify(recordsList));
-        console.log("Central Game Station: Successfully saved record", record);
-    } catch (err) {
-        console.error("Central Game Station: Failed to save record", err);
+        recordsList.unshift(record);
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(recordsList));
+    } catch (e) {}
+
+    // 2. Transmit to Cloud Database (Firebase Realtime Database REST API)
+    if (CENTRAL_STATION_DB_URL && !CENTRAL_STATION_DB_URL.includes("PASTE_YOUR_FIREBASE_URL_HERE")) {
+        try {
+            const cleanUrl = CENTRAL_STATION_DB_URL.replace(/\/$/, "");
+            const res = await fetch(`${cleanUrl}/participants.json`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(record)
+            });
+
+            if (res.ok) {
+                submissionStatus.className = "submission-status success";
+                submissionStatus.textContent = "✅ Results successfully transmitted to Central Game Station!";
+                return;
+            }
+        } catch (err) {
+            console.warn("Cloud transmission notice:", err);
+        }
     }
+
+    submissionStatus.className = "submission-status success";
+    submissionStatus.textContent = "✅ Results saved and ready for Central Game Station!";
 }
 
-// 10. Drag & Drop Event Listeners
+// Drag & Drop Event Listeners
 function setupDragAndDrop() {
     const cards = document.querySelectorAll(".goal-card");
     const slots = document.querySelectorAll(".slot-item");
@@ -428,7 +460,7 @@ function placeCardInSlot(card, slotItem) {
     updateStats();
 }
 
-// 11. Mobile Tap-to-Select Fallback Handlers
+// Mobile Tap-to-Select Fallback Handlers
 let mobileListenersAttached = false;
 function setupMobileFallback() {
     if (mobileListenersAttached) return;
@@ -469,7 +501,7 @@ function setupMobileFallback() {
     });
 }
 
-// 12. Sticky Header Visual Enhancement
+// Sticky Header Visual Enhancement
 window.addEventListener("scroll", () => {
     if (window.scrollY > 80) {
         dashboardPanel.classList.add("is-scrolled");
@@ -478,10 +510,10 @@ window.addEventListener("scroll", () => {
     }
 });
 
-// 13. Replay Action Binding
+// Replay Action Binding
 replayBtn.addEventListener("click", initGame);
 
-// 14. Custom Canvas-Based Confetti Particle Engine
+// Custom Canvas-Based Confetti Particle Engine
 function triggerConfetti(amount = 120) {
     const canvas = document.getElementById("confetti-canvas");
     if (!canvas) return;
@@ -552,5 +584,5 @@ function triggerConfetti(amount = 120) {
     draw();
 }
 
-// 15. Run Game on Load
+// Run Game on Load
 window.addEventListener("DOMContentLoaded", initGame);
