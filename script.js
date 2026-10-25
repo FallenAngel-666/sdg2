@@ -1,20 +1,13 @@
 /**
  * ==========================================================================
- * SDG MATCHING GAME 2.0 - LOGIC ENGINE
- * Features: Drag & Drop (Locking), Participant Registration, Web3Forms Email,
- *           Real-time Scoring, Live Timer, Custom Canvas Confetti.
+ * SDG MATCHING GAME 2.0 - LOGIC ENGINE (CENTRAL GAME STATION EDITION)
+ * Features: Drag & Drop (Locking), Student Registration (Name, Class, Section, Roll),
+ *           Automatic Record Saving to Central Game Station, Real-time Scoring,
+ *           Detailed Match Analytics & Confetti Engine.
  * ==========================================================================
  */
 
-// ==========================================================================
-// CENTRAL EMAIL CONFIGURATION (WEB3FORMS)
-// 1. Visit https://web3forms.com/ (It is free & instant, no signup required)
-// 2. Enter your email to receive an "Access Key"
-// 3. Paste your Access Key below (e.g. "a1b2c3d4-e5f6-7a8b...")
-// ==========================================================================
-const WEB3FORMS_ACCESS_KEY = "65532051-3782-4f25-a8c7-43c6540e69b7";
-
-// UN Sustainable Development Goals Data
+// 1. UN Sustainable Development Goals Data
 const sdgData = [
     { id: 1, title: "No Poverty", desc: "End poverty in all its forms everywhere.", emoji: "🛖", color: "var(--color-sdg-1)" },
     { id: 2, title: "Zero Hunger", desc: "End hunger, achieve food security, and promote sustainable agriculture.", emoji: "🍲", color: "var(--color-sdg-2)" },
@@ -35,7 +28,10 @@ const sdgData = [
     { id: 17, title: "Partnerships for the Goals", desc: "Strengthen the means of implementation and revitalize the Global Partnership.", emoji: "🤝", color: "var(--color-sdg-17)" }
 ];
 
-// Game State Variables
+// 2. Storage Key for Central Game Station
+const CENTRAL_STATION_STORAGE_KEY = "sdg_central_game_station_records";
+
+// 3. Game State Variables
 let boardState = {
     matches: {}, // key: slotId (1-17), value: goalId (1-17)
     score: 0,
@@ -46,11 +42,13 @@ let boardState = {
     gameStarted: false,
     selectedGoalId: null, // for mobile tap fallback
     participantName: "",
-    participantId: "",
+    participantClass: "",
+    participantSection: "",
+    participantRoll: "",
     submitted: false
 };
 
-// DOM Elements
+// 4. DOM Elements
 const slotsGrid = document.getElementById("slots-grid");
 const goalsGrid = document.getElementById("goals-grid");
 const scoreDisplay = document.getElementById("score-display");
@@ -63,7 +61,9 @@ const dashboardPanel = document.querySelector(".dashboard-panel");
 const registrationOverlay = document.getElementById("registration-overlay");
 const registrationForm = document.getElementById("registration-form");
 const participantNameInput = document.getElementById("participant-name");
-const participantIdInput = document.getElementById("participant-id");
+const participantClassInput = document.getElementById("participant-class");
+const participantSectionInput = document.getElementById("participant-section");
+const participantRollInput = document.getElementById("participant-roll");
 
 // Modal Elements
 const completionModal = document.getElementById("completion-modal");
@@ -72,13 +72,11 @@ const modalScore = document.getElementById("modal-score");
 const modalTime = document.getElementById("modal-time");
 const modalAccuracy = document.getElementById("modal-accuracy");
 const modalFeedback = document.getElementById("modal-feedback-text");
-const submitResultsBtn = document.getElementById("submit-results-btn");
 const replayBtn = document.getElementById("replay-btn");
 const submissionStatus = document.getElementById("submission-status");
 
-// Initial Game Setup
+// 5. Initial Game Setup
 function initGame() {
-    // Reset State
     clearInterval(boardState.timerInterval);
     boardState = {
         matches: {},
@@ -90,7 +88,9 @@ function initGame() {
         gameStarted: false,
         selectedGoalId: null,
         participantName: "",
-        participantId: "",
+        participantClass: "",
+        participantSection: "",
+        participantRoll: "",
         submitted: false
     };
 
@@ -101,24 +101,20 @@ function initGame() {
     accuracyDisplay.textContent = "0%";
     completionModal.classList.remove("is-visible");
     completionModal.setAttribute("aria-hidden", "true");
-    
-    // Reset submission panel
-    submissionStatus.className = "submission-status";
-    submissionStatus.textContent = "";
-    submitResultsBtn.disabled = false;
-    submitResultsBtn.textContent = "Submit Results";
 
-    // Show Registration Screen at Start
+    // Reset Registration Form
     registrationOverlay.classList.add("is-visible");
     registrationOverlay.setAttribute("aria-hidden", "false");
     participantNameInput.value = "";
-    participantIdInput.value = "";
+    if (participantClassInput) participantClassInput.value = "";
+    if (participantSectionInput) participantSectionInput.value = "";
+    if (participantRollInput) participantRollInput.value = "";
 
     // Render Slots & Goals
     renderSlots();
     renderGoals();
 
-    // Setup Event Listeners
+    // Attach Event Handlers
     setupDragAndDrop();
     setupMobileFallback();
 }
@@ -147,7 +143,7 @@ function renderSlots() {
     }
 }
 
-// Render shuffled goals list (removing sequential numbers to prevent identification)
+// Render shuffled goals list (no numbers in title to ensure identification by text/concept)
 function renderGoals() {
     goalsGrid.innerHTML = "";
     
@@ -189,20 +185,22 @@ function renderGoals() {
     });
 }
 
-// Participant Registration Handler
+// 6. Registration Form Submission
 registrationForm.addEventListener("submit", (e) => {
     e.preventDefault();
     boardState.participantName = participantNameInput.value.trim();
-    boardState.participantId = participantIdInput.value.trim();
+    boardState.participantClass = participantClassInput ? participantClassInput.value.trim() : "-";
+    boardState.participantSection = participantSectionInput ? participantSectionInput.value.trim().toUpperCase() : "-";
+    boardState.participantRoll = participantRollInput ? participantRollInput.value.trim() : "-";
 
-    // Hide registration and start game/timer
+    // Hide registration overlay and start timer
     registrationOverlay.classList.remove("is-visible");
     registrationOverlay.setAttribute("aria-hidden", "true");
     
     startTimer();
 });
 
-// Timer Functions
+// 7. Timer Functions
 function startTimer() {
     boardState.gameStarted = true;
     boardState.startTime = Date.now();
@@ -222,7 +220,7 @@ function formatTime(seconds) {
     return `${mins}:${secs}`;
 }
 
-// Scoring and Stats Updater
+// 8. Scoring and Stats Updater
 function updateStats() {
     let matchesCount = Object.keys(boardState.matches).length;
     let correctCount = 0;
@@ -246,44 +244,100 @@ function updateStats() {
     accuracyDisplay.textContent = `${accuracy}%`;
 
     if (matchesCount === 17) {
-        endGame(accuracy);
+        endGame(accuracy, correctCount);
     }
 }
 
-// Evaluate performance and trigger end modal
-function endGame(accuracy) {
+// 9. End Game, Celebration, and Central Game Station Auto-Save
+function endGame(accuracy, correctCount) {
     clearInterval(boardState.timerInterval);
-    
-    // Display stats in modal
-    modalSubtitleText.textContent = `Participant: ${boardState.participantName} (${boardState.participantId})`;
+
+    // Build Detailed Breakdown for each of the 17 SDG goals
+    const matchBreakdown = [];
+    for (let slot = 1; slot <= 17; slot++) {
+        const placedGoalId = boardState.matches[slot];
+        const isMatch = placedGoalId === slot;
+        const correctGoal = sdgData.find(g => g.id === slot);
+        const placedGoal = sdgData.find(g => g.id === placedGoalId);
+
+        matchBreakdown.push({
+            slotNumber: slot,
+            isCorrect: isMatch,
+            marks: isMatch ? 2 : 0,
+            expectedGoalId: slot,
+            expectedGoalTitle: correctGoal ? correctGoal.title : `Goal ${slot}`,
+            expectedEmoji: correctGoal ? correctGoal.emoji : "🎯",
+            placedGoalId: placedGoalId,
+            placedGoalTitle: placedGoal ? placedGoal.title : "Not placed",
+            placedEmoji: placedGoal ? placedGoal.emoji : "❓"
+        });
+    }
+
+    // Create Complete Participant Record
+    const now = new Date();
+    const participantRecord = {
+        id: "REC-" + Date.now() + "-" + Math.floor(Math.random() * 1000),
+        name: boardState.participantName,
+        className: boardState.participantClass,
+        section: boardState.participantSection,
+        rollNumber: boardState.participantRoll,
+        score: boardState.score,
+        maxScore: 34,
+        correctCount: correctCount,
+        accuracy: accuracy,
+        timeTaken: formatTime(boardState.timeElapsed),
+        timeSeconds: boardState.timeElapsed,
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }),
+        timestamp: now.toISOString(),
+        details: matchBreakdown
+    };
+
+    // Save record to Central Game Station storage
+    saveRecordToCentralStation(participantRecord);
+
+    // Update Modal Information
+    modalSubtitleText.textContent = `Student: ${boardState.participantName} | Class: ${boardState.participantClass}-${boardState.participantSection} | Roll: ${boardState.participantRoll}`;
     modalScore.textContent = `${boardState.score} / 34 Marks`;
     modalTime.textContent = formatTime(boardState.timeElapsed);
     modalAccuracy.textContent = `${accuracy}%`;
 
-    // Generate feedback based on marks
+    // Personalized feedback based on score
     let feedback = "";
     if (boardState.score === 34) {
-        feedback = "🏆 Incredible! Perfect Score! You are officially an SDG Champion. You know all 17 Sustainable Development Goals perfectly!";
+        feedback = "🏆 Incredible! Perfect Score! You are an SDG Champion with all 17 goals matched correctly!";
         triggerConfetti(200);
     } else if (boardState.score >= 26) {
-        feedback = `⭐ Good job! You scored ${boardState.score}/34. Submit your results and try again for a perfect score!`;
+        feedback = `⭐ Brilliant effort! You scored ${boardState.score}/34 marks. Your result is recorded in the Central Game Station!`;
         triggerConfetti(80);
     } else if (boardState.score >= 18) {
-        feedback = `👍 Nice try! You scored ${boardState.score}/34. Submit your results and study the goals again!`;
+        feedback = `👍 Good job! You scored ${boardState.score}/34 marks. Keep reviewing the 17 global goals!`;
     } else {
-        feedback = `📚 Keep studying! You scored ${boardState.score}/34. Submit your results and try again to improve!`;
+        feedback = `📚 Keep learning! You scored ${boardState.score}/34 marks. Check your details in the Central Game Station!`;
     }
-    
     modalFeedback.textContent = feedback;
 
-    // Show modal
+    // Show modal after slight delay for smooth transition
     setTimeout(() => {
         completionModal.classList.add("is-visible");
         completionModal.setAttribute("aria-hidden", "false");
-    }, 500);
+    }, 450);
 }
 
-// Drag & Drop HTML5 Event Handlers
+// Save participant data to localStorage for Central Game Station
+function saveRecordToCentralStation(record) {
+    try {
+        const stored = localStorage.getItem(CENTRAL_STATION_STORAGE_KEY);
+        const recordsList = stored ? JSON.parse(stored) : [];
+        recordsList.unshift(record); // Prepend so newest is at the top
+        localStorage.setItem(CENTRAL_STATION_STORAGE_KEY, JSON.stringify(recordsList));
+        console.log("Central Game Station: Successfully saved record", record);
+    } catch (err) {
+        console.error("Central Game Station: Failed to save record", err);
+    }
+}
+
+// 10. Drag & Drop Event Listeners
 function setupDragAndDrop() {
     const cards = document.querySelectorAll(".goal-card");
     const slots = document.querySelectorAll(".slot-item");
@@ -348,7 +402,7 @@ function placeCardInSlot(card, slotItem) {
     boardState.matches[slotNumber] = goalId;
     boardState.attempts++;
 
-    // LOCK: Disable drag
+    // LOCK: Disable further dragging
     card.setAttribute("draggable", "false");
     card.classList.remove("selected");
     card.style.cursor = "default";
@@ -357,7 +411,7 @@ function placeCardInSlot(card, slotItem) {
     target.appendChild(card);
     target.classList.add("has-card");
 
-    // Add lock indicator
+    // Add lock indicator symbol (🔒)
     const lockIndicator = document.createElement("div");
     lockIndicator.className = "slot-lock-indicator";
     lockIndicator.innerHTML = "🔒";
@@ -374,7 +428,7 @@ function placeCardInSlot(card, slotItem) {
     updateStats();
 }
 
-// Mobile Tap-to-Select Fallback Handlers
+// 11. Mobile Tap-to-Select Fallback Handlers
 let mobileListenersAttached = false;
 function setupMobileFallback() {
     if (mobileListenersAttached) return;
@@ -415,63 +469,7 @@ function setupMobileFallback() {
     });
 }
 
-// Web3Forms Result Email Sender
-submitResultsBtn.addEventListener("click", async () => {
-    if (boardState.submitted) return;
-
-    if (WEB3FORMS_ACCESS_KEY === "YOUR_ACCESS_KEY_HERE" || !WEB3FORMS_ACCESS_KEY) {
-        submissionStatus.className = "submission-status error";
-        submissionStatus.innerHTML = "⚠️ Email Key not configured. Please get a key at <a href='https://web3forms.com/' target='_blank' style='color:inherit;'>web3forms.com</a> and paste it into script.js!";
-        return;
-    }
-
-    submitResultsBtn.disabled = true;
-    submitResultsBtn.textContent = "Sending...";
-    submissionStatus.className = "submission-status sending";
-    submissionStatus.textContent = "Submitting score report to instructor...";
-
-    try {
-        const payload = {
-            access_key: WEB3FORMS_ACCESS_KEY,
-            subject: `SDG Matcher Results: ${boardState.participantName} (${boardState.participantId})`,
-            from_name: "SDG Game Engine",
-            "Participant Name": boardState.participantName,
-            "Participant ID / Email": boardState.participantId,
-            "Score": `${boardState.score} / 34 Marks`,
-            "Accuracy": accuracyDisplay.textContent,
-            "Time Elapsed": formatTime(boardState.timeElapsed),
-            message: `Student details:\nName: ${boardState.participantName}\nID/Email: ${boardState.participantId}\n\nGame Stats:\nMarks Scored: ${boardState.score}/34\nAccuracy Rate: ${accuracyDisplay.textContent}\nTime Taken: ${formatTime(boardState.timeElapsed)}`
-        };
-
-        const response = await fetch("https://api.web3forms.com/submit", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "Accept": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
-
-        const result = await response.json();
-
-        if (result.success) {
-            boardState.submitted = true;
-            submitResultsBtn.textContent = "Submitted";
-            submissionStatus.className = "submission-status success";
-            submissionStatus.textContent = "✅ Results successfully emailed to your instructor!";
-        } else {
-            throw new Error(result.message || "Server rejected submission");
-        }
-    } catch (error) {
-        console.error("Submission Error:", error);
-        submitResultsBtn.disabled = false;
-        submitResultsBtn.textContent = "Submit Results";
-        submissionStatus.className = "submission-status error";
-        submissionStatus.textContent = `❌ Error: ${error.message || "Failed to connect to email service. Try again."}`;
-    }
-});
-
-// Sticky Header Visual Enhancement
+// 12. Sticky Header Visual Enhancement
 window.addEventListener("scroll", () => {
     if (window.scrollY > 80) {
         dashboardPanel.classList.add("is-scrolled");
@@ -480,12 +478,13 @@ window.addEventListener("scroll", () => {
     }
 });
 
-// Replay Action Binding
+// 13. Replay Action Binding
 replayBtn.addEventListener("click", initGame);
 
-// Custom Canvas-Based Confetti Particle Engine
+// 14. Custom Canvas-Based Confetti Particle Engine
 function triggerConfetti(amount = 120) {
     const canvas = document.getElementById("confetti-canvas");
+    if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
     canvas.width = window.innerWidth;
@@ -504,7 +503,6 @@ function triggerConfetti(amount = 120) {
     ];
 
     let particles = [];
-
     for (let i = 0; i < amount; i++) {
         particles.push({
             x: Math.random() * canvas.width,
@@ -523,14 +521,13 @@ function triggerConfetti(amount = 120) {
 
     function draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-
         let activeParticles = false;
 
         particles.forEach((p, idx) => {
             p.tiltAngle += p.tiltAngleIncremental;
             p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
             p.x += Math.sin(p.tiltAngle);
-            p.tilt = Math.sin(p.tiltAngle - idx/3) * 15;
+            p.tilt = Math.sin(p.tiltAngle - idx / 3) * 15;
 
             ctx.beginPath();
             ctx.lineWidth = p.r;
@@ -555,5 +552,5 @@ function triggerConfetti(amount = 120) {
     draw();
 }
 
-// Run Game on Load
+// 15. Run Game on Load
 window.addEventListener("DOMContentLoaded", initGame);

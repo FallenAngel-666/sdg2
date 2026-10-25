@@ -18,27 +18,45 @@
 
     <!-- Registration Screen (Visible at start) -->
     <div id="registration-overlay" class="modal-overlay is-visible" role="dialog" aria-labelledby="reg-title">
-        <div class="modal-card">
+        <div class="modal-card registration-card">
             <div class="modal-header-icon">📝</div>
             <h2 id="reg-title">Participant Registration</h2>
-            <p class="modal-subtitle">Please enter your details to start the SDG Matching Challenge.</p>
+            <p class="modal-subtitle">Enter your student details to begin the SDG Matching Challenge.</p>
             <form id="registration-form">
                 <div class="input-group">
-                    <label for="participant-name">Full Name</label>
-                    <input type="text" id="participant-name" required placeholder="e.g. John Doe">
+                    <label for="participant-name">Student Full Name</label>
+                    <input type="text" id="participant-name" required placeholder="e.g. Priyan Sharma" autocomplete="name">
+                </div>
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="participant-class">Class / Grade</label>
+                        <input type="text" id="participant-class" required placeholder="e.g. 10th or Grade 9">
+                    </div>
+                    <div class="input-group">
+                        <label for="participant-section">Section</label>
+                        <input type="text" id="participant-section" required placeholder="e.g. A, B or C">
+                    </div>
                 </div>
                 <div class="input-group">
-                    <label for="participant-id">Participant ID / Email</label>
-                    <input type="text" id="participant-id" required placeholder="e.g. Roll No or Email">
+                    <label for="participant-roll">Roll Number</label>
+                    <input type="text" id="participant-roll" required placeholder="e.g. 24 or CS-104">
                 </div>
                 <button type="submit" class="btn btn-primary btn-large" style="width: 100%; margin-top: 1rem;">
-                    Start Challenge
+                    Start Challenge 🚀
                 </button>
             </form>
         </div>
     </div>
 
     <div class="app-container">
+        <!-- Top Navigation Bar -->
+        <div class="top-nav">
+            <span class="nav-badge">SDG 2.0 Edition</span>
+            <a href="central-game-station.html" class="nav-link station-btn" title="View all student results and download Excel sheet">
+                <span class="btn-icon">📊</span> Central Game Station ↗
+            </a>
+        </div>
+
         <!-- Header Section -->
         <header class="app-header">
             <div class="logo-area">
@@ -95,6 +113,11 @@
         <!-- Custom Instructions / Info Footer -->
         <footer class="app-footer">
             <p>Created to support understanding of the UN 2030 Agenda. Each correct goal awards <strong>2 marks</strong>. Once placed, choices are final and cannot be modified.</p>
+            <p style="margin-top: 0.5rem;">
+                <a href="central-game-station.html" style="color: var(--text-accent); text-decoration: none; font-weight: 600;">
+                    Go to Central Game Station (Results Dashboard) →
+                </a>
+            </p>
         </footer>
     </div>
 
@@ -124,18 +147,20 @@
                 Excellent effort! You are an SDG expert.
             </div>
 
-            <!-- Email Submission Action Panel -->
+            <!-- Central Game Station Save Panel -->
             <div class="modal-actions" id="modal-actions-box">
-                <button id="submit-results-btn" class="btn btn-primary btn-large">
-                    Submit Results
-                </button>
+                <a href="central-game-station.html" class="btn btn-primary btn-large">
+                    📊 View in Central Game Station
+                </a>
                 <button id="replay-btn" class="btn btn-secondary btn-large">
                     Play Again
                 </button>
             </div>
             
             <!-- Submission status feedback -->
-            <div id="submission-status" class="submission-status"></div>
+            <div id="submission-status" class="submission-status success">
+                ✅ Saved to Central Game Station automatically!
+            </div>
         </div>
     </div>
 

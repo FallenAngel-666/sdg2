@@ -1,0 +1,1110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Central Game Station - SDG Matching Challenge Records</title>
+    <meta name="description" content="Central Game Station for tracking student participants, marks, analytics, and exporting reports for the UN Sustainable Development Goals matching game.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- SheetJS for real Excel (.xlsx) file generation -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        /* ==========================================================================
+           CENTRAL GAME STATION SPECIFIC STYLES
+           ========================================================================== */
+        .station-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            padding: 2rem;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 2rem;
+        }
+
+        .station-title-group h1 {
+            font-family: var(--font-title);
+            font-size: 2.2rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-primary) 30%, var(--text-accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .station-title-group p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            margin-top: 0.25rem;
+        }
+
+        .station-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* KPI Cards Grid */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .kpi-card {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            transition: all var(--transition-normal);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--border-color-glow);
+            box-shadow: var(--shadow-md);
+        }
+
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--card-accent, var(--text-accent));
+        }
+
+        .kpi-title {
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .kpi-val {
+            font-family: var(--font-title);
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .kpi-subtitle {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        /* Filter & Control Bar */
+        .control-bar {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 1.25rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .search-filter-group {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            flex: 1;
+            min-width: 300px;
+            flex-wrap: wrap;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .search-box input {
+            width: 100%;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1rem 0.75rem 2.5rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            transition: all var(--transition-fast);
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--text-accent);
+            box-shadow: 0 0 10px rgba(38, 189, 226, 0.25);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        .filter-select {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.75rem 1rem;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .filter-select:focus {
+            border-color: var(--text-accent);
+        }
+
+        .export-group {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+
+        /* Main Records Table */
+        .table-container {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 2rem;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table.records-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        table.records-table th {
+            background: rgba(255, 255, 255, 0.02);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 1.25rem;
+            font-family: var(--font-title);
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        table.records-table td {
+            padding: 1rem 1.25rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            color: var(--text-secondary);
+            vertical-align: middle;
+        }
+
+        table.records-table tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-primary);
+        }
+
+        /* Table Badges & Tags */
+        .student-name-cell {
+            font-weight: 700;
+            color: var(--text-primary) !important;
+            font-size: 1rem;
+        }
+
+        .class-badge {
+            display: inline-flex;
+            align-items: center;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 0.25rem 0.65rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.82rem;
+            color: var(--text-primary);
+        }
+
+        .score-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-family: var(--font-title);
+            font-weight: 800;
+            padding: 0.35rem 0.75rem;
+            border-radius: 10px;
+            font-size: 0.95rem;
+        }
+
+        .score-pill.champion {
+            background: rgba(16, 185, 129, 0.15);
+            color: #10b981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .score-pill.high {
+            background: rgba(38, 189, 226, 0.15);
+            color: #26bde2;
+            border: 1px solid rgba(38, 189, 226, 0.3);
+        }
+
+        .score-pill.mid {
+            background: rgba(252, 195, 11, 0.15);
+            color: #fcc30b;
+            border: 1px solid rgba(252, 195, 11, 0.3);
+        }
+
+        .score-pill.low {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .row-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .action-icon-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            border-radius: 10px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all var(--transition-fast);
+            font-size: 1rem;
+        }
+
+        .action-icon-btn:hover {
+            transform: translateY(-2px);
+            color: var(--text-primary);
+            border-color: var(--border-color-glow);
+        }
+
+        .action-icon-btn.btn-view:hover {
+            background: rgba(38, 189, 226, 0.15);
+            border-color: var(--text-accent);
+            color: var(--text-accent);
+        }
+
+        .action-icon-btn.btn-del:hover {
+            background: rgba(239, 68, 68, 0.15);
+            border-color: var(--color-wrong);
+            color: var(--color-wrong);
+        }
+
+        /* Empty State */
+        .empty-state {
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .empty-icon {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .empty-title {
+            font-family: var(--font-title);
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        /* View Details Modal */
+        .details-modal-card {
+            max-width: 900px;
+            width: 95%;
+            max-height: 90vh;
+            overflow-y: auto;
+            text-align: left;
+            padding: 2.25rem;
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .student-profile h2 {
+            font-family: var(--font-title);
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .student-meta {
+            display: flex;
+            gap: 1.25rem;
+            flex-wrap: wrap;
+            margin-top: 0.5rem;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .close-modal-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--transition-fast);
+        }
+
+        .close-modal-btn:hover {
+            color: var(--text-primary);
+            background: var(--color-wrong);
+            border-color: var(--color-wrong);
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 0.85rem;
+            margin-top: 1rem;
+        }
+
+        .detail-slot-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            padding: 0.85rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.35rem;
+            position: relative;
+        }
+
+        .detail-slot-item.correct {
+            border-color: rgba(16, 185, 129, 0.4);
+            background: rgba(16, 185, 129, 0.05);
+        }
+
+        .detail-slot-item.wrong {
+            border-color: rgba(239, 68, 68, 0.4);
+            background: rgba(239, 68, 68, 0.05);
+        }
+
+        .slot-badge-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+
+        .slot-pill-num {
+            color: var(--text-muted);
+        }
+
+        .slot-pill-status {
+            padding: 0.15rem 0.5rem;
+            border-radius: 6px;
+        }
+
+        .correct .slot-pill-status {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .wrong .slot-pill-status {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .detail-slot-title {
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .detail-expected {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+        }
+
+        /* Toast notifications */
+        .toast-notice {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--bg-card);
+            border: 1px solid var(--text-accent);
+            color: var(--text-primary);
+            padding: 0.85rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all var(--transition-normal);
+        }
+
+        .toast-notice.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Top Navigation -->
+        <div class="top-nav">
+            <span class="nav-badge">Admin Dashboard</span>
+            <a href="index.html" class="nav-link station-btn" title="Back to SDG Matching Game">
+                🎮 Back to SDG Matching Game
+            </a>
+        </div>
+
+        <!-- Central Game Station Header -->
+        <header class="station-header">
+            <div class="station-title-group">
+                <div class="logo-area" style="justify-content: flex-start; margin-bottom: 0.25rem;">
+                    <span class="sdg-wheel-icon"></span>
+                    <h1>Central Game Station</h1>
+                </div>
+                <p>Real-time analytics, participant scorecard, and reporting for the 17 UN Sustainable Development Goals Challenge.</p>
+            </div>
+            <div class="station-actions">
+                <button id="btn-export-excel" class="btn btn-primary" title="Export full participants record as Microsoft Excel (.xlsx)">
+                    📥 Download Excel
+                </button>
+                <button id="btn-export-csv" class="btn btn-secondary" title="Export as CSV">
+                    📄 Download CSV
+                </button>
+                <button id="btn-clear-all" class="btn btn-secondary" style="border-color: rgba(239, 68, 68, 0.4); color: #ef4444;" title="Clear all stored student entries">
+                    🗑️ Clear Entries
+                </button>
+            </div>
+        </header>
+
+        <!-- KPI Summary Cards -->
+        <section class="kpi-grid">
+            <div class="kpi-card" style="--card-accent: #26bde2;">
+                <div class="kpi-title">
+                    <span>Total Participants</span>
+                    <span>👥</span>
+                </div>
+                <div class="kpi-val" id="kpi-total-participants">0</div>
+                <div class="kpi-subtitle">Students registered & completed</div>
+            </div>
+
+            <div class="kpi-card" style="--card-accent: #10b981;">
+                <div class="kpi-title">
+                    <span>Average Marks</span>
+                    <span>📊</span>
+                </div>
+                <div class="kpi-val" id="kpi-avg-score">0 <span style="font-size: 1rem; color: var(--text-muted);">/ 34</span></div>
+                <div class="kpi-subtitle" id="kpi-avg-accuracy">0% avg accuracy</div>
+            </div>
+
+            <div class="kpi-card" style="--card-accent: #fcc30b;">
+                <div class="kpi-title">
+                    <span>SDG Champions (34/34)</span>
+                    <span>🏆</span>
+                </div>
+                <div class="kpi-val" id="kpi-top-scorers">0</div>
+                <div class="kpi-subtitle">Perfect score achievers</div>
+            </div>
+
+            <div class="kpi-card" style="--card-accent: #fd6925;">
+                <div class="kpi-title">
+                    <span>Average Time Taken</span>
+                    <span>⏱️</span>
+                </div>
+                <div class="kpi-val" id="kpi-avg-time">00:00</div>
+                <div class="kpi-subtitle">Speed of completion</div>
+            </div>
+        </section>
+
+        <!-- Controls: Search, Filters & Bulk Actions -->
+        <div class="control-bar">
+            <div class="search-filter-group">
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="station-search-input" placeholder="Search by student name, roll number, or class...">
+                </div>
+                <select id="station-class-filter" class="filter-select">
+                    <option value="ALL">All Classes & Grades</option>
+                </select>
+                <select id="station-sort-filter" class="filter-select">
+                    <option value="NEWEST">Sort: Newest First</option>
+                    <option value="SCORE_HIGH">Sort: Highest Marks</option>
+                    <option value="SCORE_LOW">Sort: Lowest Marks</option>
+                    <option value="NAME_AZ">Sort: Name (A-Z)</option>
+                    <option value="TIME_FAST">Sort: Fastest Time</option>
+                </select>
+            </div>
+            <button id="btn-refresh" class="btn btn-secondary" title="Reload entries from storage">
+                🔄 Refresh
+            </button>
+        </div>
+
+        <!-- Participants Data Table -->
+        <main class="table-container">
+            <div class="table-responsive">
+                <table class="records-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Roll No</th>
+                            <th>Student Name</th>
+                            <th>Class</th>
+                            <th>Section</th>
+                            <th>Marks</th>
+                            <th>Accuracy</th>
+                            <th>Time</th>
+                            <th>Submission Date</th>
+                            <th style="text-align: center;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="records-table-body">
+                        <!-- Dynamic Records Injected Here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="table-empty-state" class="empty-state" style="display: none;">
+                <div class="empty-icon">📂</div>
+                <div class="empty-title">No Participant Records Found</div>
+                <p>When students complete the SDG matching challenge, their results will automatically appear here.</p>
+                <p style="margin-top: 1rem;">
+                    <a href="index.html" class="btn btn-primary">Start a New Game</a>
+                </p>
+            </div>
+        </main>
+    </div>
+
+    <!-- View Details Modal -->
+    <div id="view-details-modal" class="modal-overlay" aria-hidden="true" role="dialog">
+        <div class="modal-card details-modal-card">
+            <div class="details-header">
+                <div class="student-profile">
+                    <h2><span id="detail-student-name">Student Name</span></h2>
+                    <div class="student-meta">
+                        <span><strong>Roll No:</strong> <span id="detail-student-roll">-</span></span>
+                        <span><strong>Class:</strong> <span id="detail-student-class">-</span></span>
+                        <span><strong>Section:</strong> <span id="detail-student-section">-</span></span>
+                        <span><strong>Date:</strong> <span id="detail-student-date">-</span></span>
+                    </div>
+                </div>
+                <button class="close-modal-btn" id="btn-close-details" title="Close Details Modal">&times;</button>
+            </div>
+
+            <div class="modal-stats" style="margin-bottom: 1.5rem;">
+                <div class="modal-stat-item">
+                    <div class="modal-stat-val" id="detail-score">0 / 34</div>
+                    <div class="modal-stat-lbl">Final Marks</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-val" id="detail-accuracy">0%</div>
+                    <div class="modal-stat-lbl">Accuracy</div>
+                </div>
+                <div class="modal-stat-item">
+                    <div class="modal-stat-val" id="detail-time">00:00</div>
+                    <div class="modal-stat-lbl">Time Taken</div>
+                </div>
+            </div>
+
+            <h3 style="font-family: var(--font-title); font-size: 1.15rem; color: var(--text-primary); margin-bottom: 0.5rem;">
+                17 Goals Response Breakdown:
+            </h3>
+
+            <!-- 17-Goal Grid Breakdown -->
+            <div id="detail-goals-breakdown" class="details-grid">
+                <!-- Injected via JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notice -->
+    <div id="toast-notice" class="toast-notice"></div>
+
+    <!-- JavaScript Logic for Central Game Station -->
+    <script>
+        const STORAGE_KEY = "sdg_central_game_station_records";
+
+        // DOM elements
+        const tableBody = document.getElementById("records-table-body");
+        const emptyState = document.getElementById("table-empty-state");
+        const searchInput = document.getElementById("station-search-input");
+        const classFilter = document.getElementById("station-class-filter");
+        const sortFilter = document.getElementById("station-sort-filter");
+        const btnRefresh = document.getElementById("btn-refresh");
+        const btnClearAll = document.getElementById("btn-clear-all");
+        const btnExportExcel = document.getElementById("btn-export-excel");
+        const btnExportCsv = document.getElementById("btn-export-csv");
+
+        // KPI elements
+        const kpiTotal = document.getElementById("kpi-total-participants");
+        const kpiAvgScore = document.getElementById("kpi-avg-score");
+        const kpiAvgAccuracy = document.getElementById("kpi-avg-accuracy");
+        const kpiTopScorers = document.getElementById("kpi-top-scorers");
+        const kpiAvgTime = document.getElementById("kpi-avg-time");
+
+        // Details Modal elements
+        const viewModal = document.getElementById("view-details-modal");
+        const btnCloseDetails = document.getElementById("btn-close-details");
+        const detailStudentName = document.getElementById("detail-student-name");
+        const detailStudentRoll = document.getElementById("detail-student-roll");
+        const detailStudentClass = document.getElementById("detail-student-class");
+        const detailStudentSection = document.getElementById("detail-student-section");
+        const detailStudentDate = document.getElementById("detail-student-date");
+        const detailScore = document.getElementById("detail-score");
+        const detailAccuracy = document.getElementById("detail-accuracy");
+        const detailTime = document.getElementById("detail-time");
+        const detailGoalsBreakdown = document.getElementById("detail-goals-breakdown");
+        const toastNotice = document.getElementById("toast-notice");
+
+        let cachedRecords = [];
+
+        // Load records from localStorage
+        function loadRecords() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                cachedRecords = raw ? JSON.parse(raw) : [];
+            } catch (e) {
+                console.error("Failed to load records:", e);
+                cachedRecords = [];
+            }
+            populateClassDropdown();
+            renderDashboard();
+        }
+
+        // Save records back to storage
+        function saveRecords(records) {
+            cachedRecords = records;
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+            populateClassDropdown();
+            renderDashboard();
+        }
+
+        // Populate class filter dropdown dynamically
+        function populateClassDropdown() {
+            const currentSelected = classFilter.value;
+            const uniqueClasses = new Set();
+            cachedRecords.forEach(r => {
+                if (r.className && r.className !== "-") uniqueClasses.add(r.className);
+            });
+
+            classFilter.innerHTML = '<option value="ALL">All Classes & Grades</option>';
+            uniqueClasses.forEach(cls => {
+                const opt = document.createElement("option");
+                opt.value = cls;
+                opt.textContent = "Class: " + cls;
+                classFilter.appendChild(opt);
+            });
+
+            if (uniqueClasses.has(currentSelected)) {
+                classFilter.value = currentSelected;
+            } else {
+                classFilter.value = "ALL";
+            }
+        }
+
+        // Render KPI statistics & table
+        function renderDashboard() {
+            // Update KPIs
+            const total = cachedRecords.length;
+            kpiTotal.textContent = total;
+
+            if (total === 0) {
+                kpiAvgScore.innerHTML = `0 <span style="font-size: 1rem; color: var(--text-muted);">/ 34</span>`;
+                kpiAvgAccuracy.textContent = "0% avg accuracy";
+                kpiTopScorers.textContent = "0";
+                kpiAvgTime.textContent = "00:00";
+            } else {
+                const sumScore = cachedRecords.reduce((acc, r) => acc + (Number(r.score) || 0), 0);
+                const avgScore = (sumScore / total).toFixed(1);
+                const sumAccuracy = cachedRecords.reduce((acc, r) => acc + (Number(r.accuracy) || 0), 0);
+                const avgAccuracy = Math.round(sumAccuracy / total);
+                const champions = cachedRecords.filter(r => Number(r.score) === 34).length;
+                const sumSeconds = cachedRecords.reduce((acc, r) => acc + (Number(r.timeSeconds) || 0), 0);
+                const avgSecs = Math.round(sumSeconds / total);
+
+                kpiAvgScore.innerHTML = `${avgScore} <span style="font-size: 1rem; color: var(--text-muted);">/ 34</span>`;
+                kpiAvgAccuracy.textContent = `${avgAccuracy}% avg accuracy`;
+                kpiTopScorers.textContent = champions;
+                kpiAvgTime.textContent = formatSeconds(avgSecs);
+            }
+
+            // Filter & Sort
+            let filtered = [...cachedRecords];
+
+            const searchVal = searchInput.value.trim().toLowerCase();
+            if (searchVal) {
+                filtered = filtered.filter(r => 
+                    (r.name && r.name.toLowerCase().includes(searchVal)) ||
+                    (r.rollNumber && r.rollNumber.toLowerCase().includes(searchVal)) ||
+                    (r.className && r.className.toLowerCase().includes(searchVal)) ||
+                    (r.section && r.section.toLowerCase().includes(searchVal))
+                );
+            }
+
+            const classVal = classFilter.value;
+            if (classVal !== "ALL") {
+                filtered = filtered.filter(r => r.className === classVal);
+            }
+
+            const sortVal = sortFilter.value;
+            if (sortVal === "SCORE_HIGH") {
+                filtered.sort((a, b) => (Number(b.score) || 0) - (Number(a.score) || 0));
+            } else if (sortVal === "SCORE_LOW") {
+                filtered.sort((a, b) => (Number(a.score) || 0) - (Number(b.score) || 0));
+            } else if (sortVal === "NAME_AZ") {
+                filtered.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
+            } else if (sortVal === "TIME_FAST") {
+                filtered.sort((a, b) => (Number(a.timeSeconds) || 999999) - (Number(b.timeSeconds) || 999999));
+            } else {
+                // Default: Newest first
+                filtered.sort((a, b) => new Date(b.timestamp || 0) - new Date(a.timestamp || 0));
+            }
+
+            // Render Table Rows
+            tableBody.innerHTML = "";
+            if (filtered.length === 0) {
+                emptyState.style.display = "block";
+            } else {
+                emptyState.style.display = "none";
+                filtered.forEach((r, idx) => {
+                    const tr = document.createElement("tr");
+
+                    // Score styling pill
+                    let scoreClass = "low";
+                    const scoreNum = Number(r.score) || 0;
+                    if (scoreNum === 34) scoreClass = "champion";
+                    else if (scoreNum >= 26) scoreClass = "high";
+                    else if (scoreNum >= 18) scoreClass = "mid";
+
+                    tr.innerHTML = `
+                        <td style="color: var(--text-muted); font-weight: 700;">${idx + 1}</td>
+                        <td><strong>${escapeHtml(r.rollNumber || "-")}</strong></td>
+                        <td class="student-name-cell">${escapeHtml(r.name || "Anonymous")}</td>
+                        <td><span class="class-badge">${escapeHtml(r.className || "-")}</span></td>
+                        <td><span class="class-badge">${escapeHtml(r.section || "-")}</span></td>
+                        <td>
+                            <span class="score-pill ${scoreClass}">
+                                ${scoreNum} / 34
+                            </span>
+                        </td>
+                        <td><strong>${r.accuracy || 0}%</strong></td>
+                        <td>${escapeHtml(r.timeTaken || "-")}</td>
+                        <td style="font-size: 0.85rem; color: var(--text-muted);">${escapeHtml(r.date || "")} ${escapeHtml(r.time || "")}</td>
+                        <td style="text-align: center;">
+                            <div class="row-actions" style="justify-content: center;">
+                                <button class="action-icon-btn btn-view" title="View Full 17-Goal Details" data-id="${r.id}">
+                                    👁️
+                                </button>
+                                <button class="action-icon-btn btn-del" title="Delete Entry" data-id="${r.id}">
+                                    🗑️
+                                </button>
+                            </div>
+                        </td>
+                    `;
+                    tableBody.appendChild(tr);
+                });
+            }
+        }
+
+        // Format seconds into MM:SS
+        function formatSeconds(secs) {
+            const m = Math.floor(secs / 60).toString().padStart(2, '0');
+            const s = (secs % 60).toString().padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        // HTML safety helper
+        function escapeHtml(str) {
+            if (!str) return "";
+            return String(str)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // View details modal handler
+        function openDetails(recordId) {
+            const rec = cachedRecords.find(r => r.id === recordId);
+            if (!rec) return;
+
+            detailStudentName.textContent = rec.name || "Student";
+            detailStudentRoll.textContent = rec.rollNumber || "-";
+            detailStudentClass.textContent = rec.className || "-";
+            detailStudentSection.textContent = rec.section || "-";
+            detailStudentDate.textContent = `${rec.date || ""} ${rec.time || ""}`;
+            detailScore.textContent = `${rec.score} / 34 Marks`;
+            detailAccuracy.textContent = `${rec.accuracy}%`;
+            detailTime.textContent = rec.timeTaken || "00:00";
+
+            detailGoalsBreakdown.innerHTML = "";
+            const detailsList = rec.details || [];
+
+            if (detailsList.length === 0) {
+                detailGoalsBreakdown.innerHTML = "<p style='color: var(--text-muted);'>No detailed goal breakdown recorded for this entry.</p>";
+            } else {
+                detailsList.forEach(item => {
+                    const slotDiv = document.createElement("div");
+                    slotDiv.className = `detail-slot-item ${item.isCorrect ? "correct" : "wrong"}`;
+
+                    slotDiv.innerHTML = `
+                        <div class="slot-badge-bar">
+                            <span class="slot-pill-num">Slot #${item.slotNumber}</span>
+                            <span class="slot-pill-status">${item.isCorrect ? "✅ +2 Marks" : "❌ 0 Marks"}</span>
+                        </div>
+                        <div class="detail-slot-title">
+                            <span>${escapeHtml(item.placedEmoji || "🎯")}</span>
+                            <span>${escapeHtml(item.placedGoalTitle || "Empty")}</span>
+                        </div>
+                        <div class="detail-expected">
+                            Expected: <strong>Goal ${item.expectedGoalId}. ${escapeHtml(item.expectedGoalTitle || "")}</strong>
+                        </div>
+                    `;
+                    detailGoalsBreakdown.appendChild(slotDiv);
+                });
+            }
+
+            viewModal.classList.add("is-visible");
+            viewModal.setAttribute("aria-hidden", "false");
+        }
+
+        // Close details modal
+        btnCloseDetails.addEventListener("click", () => {
+            viewModal.classList.remove("is-visible");
+            viewModal.setAttribute("aria-hidden", "true");
+        });
+
+        viewModal.addEventListener("click", (e) => {
+            if (e.target === viewModal) {
+                viewModal.classList.remove("is-visible");
+                viewModal.setAttribute("aria-hidden", "true");
+            }
+        });
+
+        // Delete single entry
+        function deleteEntry(recordId) {
+            const rec = cachedRecords.find(r => r.id === recordId);
+            const studentName = rec ? rec.name : "this student";
+            if (confirm(`Are you sure you want to delete the entry for "${studentName}"?`)) {
+                const updated = cachedRecords.filter(r => r.id !== recordId);
+                saveRecords(updated);
+                showToast("🗑️ Entry deleted successfully.");
+            }
+        }
+
+        // Clear all entries
+        btnClearAll.addEventListener("click", () => {
+            if (cachedRecords.length === 0) {
+                alert("No records to clear.");
+                return;
+            }
+            if (confirm(`CAUTION: Are you sure you want to clear all ${cachedRecords.length} student entries? This cannot be undone.`)) {
+                saveRecords([]);
+                showToast("🧹 All participant records have been cleared.");
+            }
+        });
+
+        // Table Action Delegation
+        tableBody.addEventListener("click", (e) => {
+            const viewBtn = e.target.closest(".btn-view");
+            if (viewBtn) {
+                const id = viewBtn.getAttribute("data-id");
+                openDetails(id);
+                return;
+            }
+
+            const delBtn = e.target.closest(".btn-del");
+            if (delBtn) {
+                const id = delBtn.getAttribute("data-id");
+                deleteEntry(id);
+                return;
+            }
+        });
+
+        // Export to Excel (.xlsx) using SheetJS
+        btnExportExcel.addEventListener("click", () => {
+            if (cachedRecords.length === 0) {
+                alert("No participant records available to export!");
+                return;
+            }
+
+            try {
+                // Prepare clean tabular data for Excel
+                const excelData = cachedRecords.map((r, idx) => ({
+                    "S.No": idx + 1,
+                    "Roll Number": r.rollNumber || "-",
+                    "Student Name": r.name || "Anonymous",
+                    "Class": r.className || "-",
+                    "Section": r.section || "-",
+                    "Marks Scored": r.score,
+                    "Max Marks": 34,
+                    "Accuracy Rate": (r.accuracy || 0) + "%",
+                    "Time Taken": r.timeTaken || "-",
+                    "Date": r.date || "-",
+                    "Time": r.time || "-"
+                }));
+
+                // Check if XLSX library is available
+                if (typeof XLSX !== "undefined") {
+                    const worksheet = XLSX.utils.json_to_sheet(excelData);
+                    
+                    // Column widths
+                    worksheet["!cols"] = [
+                        { wch: 6 },  // S.No
+                        { wch: 15 }, // Roll Number
+                        { wch: 25 }, // Name
+                        { wch: 12 }, // Class
+                        { wch: 10 }, // Section
+                        { wch: 14 }, // Marks
+                        { wch: 12 }, // Max Marks
+                        { wch: 15 }, // Accuracy
+                        { wch: 14 }, // Time
+                        { wch: 14 }, // Date
+                        { wch: 14 }  // Time
+                    ];
+
+                    const workbook = XLSX.utils.book_new();
+                    XLSX.utils.book_append_sheet(workbook, worksheet, "SDG Results");
+
+                    const fileName = `SDG_Challenge_Results_${new Date().toISOString().slice(0, 10)}.xlsx`;
+                    XLSX.writeFile(workbook, fileName);
+                    showToast("📥 Excel sheet downloaded successfully!");
+                } else {
+                    // Fallback to CSV if library blocked
+                    downloadCsvFallback(excelData);
+                }
+            } catch (err) {
+                console.error("Excel generation error:", err);
+                downloadCsvFallback();
+            }
+        });
+
+        // Export to CSV
+        btnExportCsv.addEventListener("click", () => {
+            if (cachedRecords.length === 0) {
+                alert("No participant records available to export!");
+                return;
+            }
+            downloadCsvFallback();
+        });
+
+        // Pure JavaScript CSV generator
+        function downloadCsvFallback() {
+            const headers = ["S.No", "Roll Number", "Student Name", "Class", "Section", "Marks Scored", "Max Marks", "Accuracy", "Time Taken", "Date", "Time"];
+            const rows = cachedRecords.map((r, idx) => [
+                idx + 1,
+                `"${(r.rollNumber || "").replace(/"/g, '""')}"`,
+                `"${(r.name || "").replace(/"/g, '""')}"`,
+                `"${(r.className || "").replace(/"/g, '""')}"`,
+                `"${(r.section || "").replace(/"/g, '""')}"`,
+                r.score,
+                34,
+                `"${r.accuracy || 0}%"`,
+                `"${r.timeTaken || ""}"`,
+                `"${r.date || ""}"`,
+                `"${r.time || ""}"`
+            ]);
+
+            const csvContent = [headers.join(","), ...rows.map(row => row.join(","))].join("\n");
+            const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `SDG_Challenge_Results_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("📄 CSV report downloaded successfully!");
+        }
+
+        // Show toast notification
+        function showToast(msg) {
+            toastNotice.textContent = msg;
+            toastNotice.classList.add("show");
+            setTimeout(() => {
+                toastNotice.classList.remove("show");
+            }, 3000);
+        }
+
+        // Event listeners for search, filter & refresh
+        searchInput.addEventListener("input", renderDashboard);
+        classFilter.addEventListener("change", renderDashboard);
+        sortFilter.addEventListener("change", renderDashboard);
+        btnRefresh.addEventListener("click", () => {
+            loadRecords();
+            showToast("🔄 Data refreshed.");
+        });
+
+        // Auto-refresh when localStorage changes in another tab/window
+        window.addEventListener("storage", (e) => {
+            if (e.key === STORAGE_KEY) {
+                loadRecords();
+            }
+        });
+
+        // Initialize on load
+        window.addEventListener("DOMContentLoaded", loadRecords);
+    </script>
+</body>
+</html>
