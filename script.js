@@ -9,10 +9,8 @@
 // ==========================================================================
 // CENTRAL GAME STATION CLOUD DATABASE CONFIGURATION
 // Connects this Game Website to your Central Game Station Website.
-// 1. Create a free Realtime Database at https://console.firebase.google.com (in Test Mode)
-// 2. Paste your Database URL below (e.g. "https://your-project-default-rtdb.firebaseio.com")
 // ==========================================================================
-const CENTRAL_STATION_DB_URL = "https://sdg-central-station-default-rtdb.firebaseio.com";
+const CENTRAL_STATION_DB_URL = "https://sdg-tracker-56e77-default-rtdb.asia-southeast1.firebasedatabase.app";
 
 // UN Sustainable Development Goals Data
 const sdgData = [
@@ -346,9 +344,10 @@ async function transmitRecordToCentralStation(record) {
     } catch (e) {}
 
     // 2. Transmit to Cloud Database (Firebase Realtime Database REST API)
-    if (CENTRAL_STATION_DB_URL && !CENTRAL_STATION_DB_URL.includes("PASTE_YOUR_FIREBASE_URL_HERE")) {
+    const activeDbUrl = localStorage.getItem("sdg_central_station_db_url") || CENTRAL_STATION_DB_URL;
+    if (activeDbUrl && !activeDbUrl.includes("PASTE_YOUR_FIREBASE_URL_HERE")) {
         try {
-            const cleanUrl = CENTRAL_STATION_DB_URL.replace(/\/$/, "");
+            const cleanUrl = activeDbUrl.trim().replace(/\/$/, "");
             const res = await fetch(`${cleanUrl}/participants.json`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -357,16 +356,21 @@ async function transmitRecordToCentralStation(record) {
 
             if (res.ok) {
                 submissionStatus.className = "submission-status success";
-                submissionStatus.textContent = "✅ Results successfully transmitted to Central Game Station!";
+                submissionStatus.textContent = "✅ Results successfully delivered to Central Game Station!";
                 return;
+            } else {
+                throw new Error("HTTP " + res.status);
             }
         } catch (err) {
             console.warn("Cloud transmission notice:", err);
+            submissionStatus.className = "submission-status error";
+            submissionStatus.textContent = "⚠️ Cloud Database not connected yet. Check your Firebase Database URL!";
+            return;
         }
     }
 
-    submissionStatus.className = "submission-status success";
-    submissionStatus.textContent = "✅ Results saved and ready for Central Game Station!";
+    submissionStatus.className = "submission-status error";
+    submissionStatus.textContent = "⚠️ Please set your Firebase Realtime Database URL in script.js";
 }
 
 // Drag & Drop Event Listeners
